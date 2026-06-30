@@ -46,7 +46,43 @@ HTTPS — for example **GitHub Pages**:
 2. Repo **Settings → Pages → Build from branch**, pick this branch, folder `/root`.
 3. Open the published `https://…github.io/…` URL in Safari and Add to Home Screen.
 
-## A note on reminders
+## Pushing reminders into the Apple Reminders app
+
+Plant Care can hand each plant's next watering to the built-in **Reminders**
+app, so you get a real due-date alert even when Plant Care is closed. Apple
+doesn't let a web app write to Reminders directly, so this works through the
+**Shortcuts** app — a one-time, ~2-minute setup.
+
+### 1. Create the Shortcut (once)
+
+Open **Shortcuts** → **+** (new shortcut), name it **exactly**
+`Plant Care Reminder`, then add these actions in order:
+
+1. **Receive** — at the top, set it to receive **Text** input (and, if asked
+   what to do with no input, "Stop and respond").
+2. **Split Text** — split *Shortcut Input* by a **Custom** separator: `|`
+3. **Get Item from List** — *Item at Index* **1** of *Split Text* → this is the
+   title (rename this variable "Title" if you like).
+4. **Get Item from List** — *Item at Index* **2** of *Split Text* → the date text.
+5. **Get Dates from Input** — pass it the date text from step 4 → gives a real date.
+6. **Add New Reminder** — set the reminder text to the **Title** variable from
+   step 3; expand options and set **Remind me → At a time** to the **date**
+   from step 5.
+
+Run it once from inside Shortcuts so iOS grants it permission to add reminders.
+
+### 2. Use it
+
+In Plant Care, open a plant → **🍎 Add to Reminders**. Your phone jumps to
+Shortcuts, the reminder is created on the next watering date (9 AM by default),
+and you're returned to the app. The first time, tap **Allow** if iOS asks.
+
+> The app sends the Shortcut a single line of text formatted as
+> `Water <plant name>|YYYY-MM-DD HH:MM`, which the steps above split into the
+> reminder's title and due time. To change the default alert time, edit
+> `REMINDER_HOUR` near the top of the Reminders section in `app.js`.
+
+## A note on in-app reminders
 
 This app keeps everything on your device with **no server**, which is great for
 privacy. The trade-off is reminders: it shows you what needs water every time you

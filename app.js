@@ -250,6 +250,53 @@
 
   document.getElementById("cancelBtn").addEventListener("click", () => dialog.close());
 
+  // ---- Apple Reminders bridge (via the Shortcuts app) ----------------------
+  // Apple gives web apps no direct API to the Reminders app, but the Shortcuts
+  // app can be deep-linked. The user installs the one-time "Plant Care Reminder"
+  // shortcut (see README), and we hand it "Title|ISO-datetime"; it creates a
+  // real reminder with a due-date alert that fires even when this app is closed.
+  const SHORTCUT_NAME = "Plant Care Reminder";
+  const REMINDER_HOUR = 9; // local time the reminder should alert
+
+  function reminderDateTime(p) {
+    // Next due date at REMINDER_HOUR local time. If already overdue, use today.
+    const st = waterStatus(p);
+    const base = parseKey(st.daysUntil < 0 ? todayKey() : st.nextKey);
+    base.setHours(REMINDER_HOUR, 0, 0, 0);
+    return base;
+  }
+
+  // Local "YYYY-MM-DD HH:MM" — unambiguous for the Shortcut to parse.
+  function localStamp(d) {
+    const p2 = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  }
+
+  function isAppleDevice() {
+    return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function addToReminders(p) {
+    const when = reminderDateTime(p);
+    const title = `Water ${p.name}`;
+    // The Shortcut splits this payload on the pipe character.
+    const payload = `${title}|${localStamp(when)}`;
+    const url =
+      "shortcuts://run-shortcut?name=" +
+      encodeURIComponent(SHORTCUT_NAME) +
+      "&input=text&text=" +
+      encodeURIComponent(payload);
+
+    if (!isAppleDevice()) {
+      toast("Open this on your iPhone to add Apple Reminders.");
+      return;
+    }
+    toast(`Sending "${title}" to Reminders…`);
+    // Navigating to the scheme launches Shortcuts (or offers to install it).
+    window.location.href = url;
+  }
+
   // ---- Detail dialog -------------------------------------------------------
   const detailDialog = document.getElementById("detailDialog");
   const detailBody = document.getElementById("detailBody");
@@ -277,6 +324,9 @@
         <button type="button" class="btn primary" id="waterDetailBtn">💧 Water now</button>
       </div>
       <div class="detail-buttons">
+        <button type="button" class="btn ghost" id="remindBtn">🍎 Add to Reminders</button>
+      </div>
+      <div class="detail-buttons">
         <button type="button" class="btn danger" id="deleteBtn">Delete plant</button>
       </div>`;
 
@@ -288,6 +338,7 @@
       waterPlant(p.id);
       detailDialog.close();
     });
+    detailBody.querySelector("#remindBtn").addEventListener("click", () => addToReminders(p));
     detailBody.querySelector("#deleteBtn").addEventListener("click", () => {
       if (confirm(`Delete "${p.name}"? This can't be undone.`)) {
         detailDialog.close();
