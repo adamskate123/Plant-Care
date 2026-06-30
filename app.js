@@ -4,11 +4,13 @@
   "use strict";
 
   const STORAGE_KEY = "plantcare.v1";
+  const SETTINGS_KEY = "plantcare.settings.v1";
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   // ---- State ---------------------------------------------------------------
   /** @type {Array} */
   let plants = load();
+  let settings = loadSettings();
   let activeFilter = "all";
   let editingId = null;
 
@@ -28,6 +30,24 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(plants));
     } catch (e) {
       toast("Couldn't save — storage may be full.");
+    }
+  }
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const data = raw ? JSON.parse(raw) : {};
+      return { autoRemind: false, ...(data && typeof data === "object" ? data : {}) };
+    } catch (e) {
+      return { autoRemind: false };
+    }
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      /* non-fatal */
     }
   }
 
@@ -185,6 +205,11 @@
     save();
     render();
     toast(`💧 Watered ${p.name}`);
+    // Auto-schedule the next watering reminder if the user opted in. This
+    // navigates to Shortcuts, so run it after the UI has updated.
+    if (settings.autoRemind) {
+      setTimeout(() => addToReminders(p, { auto: true }), 200);
+    }
   }
 
   function deletePlant(id) {
@@ -277,24 +302,28 @@
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  function addToReminders(p) {
-    const when = reminderDateTime(p);
+  function buildReminderUrl(p) {
     const title = `Water ${p.name}`;
     // The Shortcut splits this payload on the pipe character.
-    const payload = `${title}|${localStamp(when)}`;
-    const url =
+    const payload = `${title}|${localStamp(reminderDateTime(p))}`;
+    return (
       "shortcuts://run-shortcut?name=" +
       encodeURIComponent(SHORTCUT_NAME) +
       "&input=text&text=" +
-      encodeURIComponent(payload);
+      encodeURIComponent(payload)
+    );
+  }
 
+  // auto=true is the "auto-create on watering" path: stay silent and do nothing
+  // off Apple devices, so desktop watering isn't interrupted by useless toasts.
+  function addToReminders(p, { auto = false } = {}) {
     if (!isAppleDevice()) {
-      toast("Open this on your iPhone to add Apple Reminders.");
+      if (!auto) toast("Open this on your iPhone to add Apple Reminders.");
       return;
     }
-    toast(`Sending "${title}" to Reminders…`);
+    if (!auto) toast(`Sending "Water ${p.name}" to Reminders…`);
     // Navigating to the scheme launches Shortcuts (or offers to install it).
-    window.location.href = url;
+    window.location.href = buildReminderUrl(p);
   }
 
   // ---- Detail dialog -------------------------------------------------------
@@ -386,7 +415,30 @@
     toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
   }
 
-  // ---- Reminders -----------------------------------------------------------
+  // ---- Auto-add to Apple Reminders toggle ----------------------------------
+  const autoRemindBtn = document.getElementById("autoRemindBtn");
+
+  function reflectAutoRemind() {
+    autoRemindBtn.classList.toggle("is-on", !!settings.autoRemind);
+    autoRemindBtn.setAttribute("aria-pressed", settings.autoRemind ? "true" : "false");
+  }
+
+  autoRemindBtn.addEventListener("click", () => {
+    settings.autoRemind = !settings.autoRemind;
+    saveSettings();
+    reflectAutoRemind();
+    if (settings.autoRemind) {
+      toast(
+        isAppleDevice()
+          ? "On — watering a plant now adds its next reminder 🍎"
+          : "On — works on your iPhone (needs the Shortcut set up)"
+      );
+    } else {
+      toast("Auto-reminders off");
+    }
+  });
+
+  // ---- In-app reminders ----------------------------------------------------
   const notifyBtn = document.getElementById("notifyBtn");
 
   function reflectNotifyState() {
@@ -457,6 +509,7 @@
 
   // ---- Init ----------------------------------------------------------------
   reflectNotifyState();
+  reflectAutoRemind();
   render();
   // Nudge on launch (after a beat so it doesn't fight the cold-start).
   setTimeout(() => notifyDuePlants(false), 1500);

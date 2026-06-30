@@ -73,9 +73,16 @@ Run it once from inside Shortcuts so iOS grants it permission to add reminders.
 
 ### 2. Use it
 
-In Plant Care, open a plant → **🍎 Add to Reminders**. Your phone jumps to
+**Manually:** open a plant → **🍎 Add to Reminders**. Your phone jumps to
 Shortcuts, the reminder is created on the next watering date (9 AM by default),
 and you're returned to the app. The first time, tap **Allow** if iOS asks.
+
+**Automatically:** tap the **🍎** button in the top bar to toggle
+**auto-reminders on**. While it's on, every time you tap **💧 Water** a plant,
+its *next* watering reminder is created in the Reminders app for you — no extra
+step. Tap **🍎** again to turn it off (the setting is remembered). Heads-up:
+each watering briefly bounces you to Shortcuts to create the reminder, so leave
+it off if you'd rather add reminders by hand.
 
 > The app sends the Shortcut a single line of text formatted as
 > `Water <plant name>|YYYY-MM-DD HH:MM`, which the steps above split into the
