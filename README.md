@@ -40,11 +40,16 @@ python3 -m http.server 8000
 ```
 
 **To use it on your phone**, host it anywhere that serves static files over
-HTTPS — for example **GitHub Pages**:
+HTTPS. This repo ships a **GitHub Pages** workflow
+(`.github/workflows/pages.yml`) that deploys automatically:
 
-1. Push this repo to GitHub.
-2. Repo **Settings → Pages → Build from branch**, pick this branch, folder `/root`.
-3. Open the published `https://…github.io/…` URL in Safari and Add to Home Screen.
+1. Merge this branch into `main`. The workflow runs on every push to `main`,
+   enables Pages if needed, and publishes the site.
+2. Watch it under the repo's **Actions** tab; when it's green, the published URL
+   appears in the run summary (and under **Settings → Pages**). If the repo has
+   Pages source set to "Deploy from a branch", switch it to **GitHub Actions**.
+3. Open that `https://…github.io/…` URL in Safari on your iPhone and
+   **Add to Home Screen**.
 
 ## Pushing reminders into the Apple Reminders app
 
