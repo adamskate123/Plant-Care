@@ -133,6 +133,23 @@
     for (const p of filtered) {
       listEl.appendChild(card(p));
     }
+    listEl.appendChild(bulkReminderButton(filtered));
+  }
+
+  function bulkReminderButton(list) {
+    const wrap = document.createElement("div");
+    wrap.className = "bulk-wrap";
+    const label =
+      activeFilter === "due"
+        ? `🍎 Send these ${list.length} to Reminders`
+        : `🍎 Add all ${list.length} to Reminders`;
+    const btn = document.createElement("button");
+    btn.className = "btn ghost bulk-btn";
+    btn.type = "button";
+    btn.textContent = label;
+    btn.addEventListener("click", () => sendAllToReminders(list));
+    wrap.appendChild(btn);
+    return wrap;
   }
 
   function renderSummary() {
@@ -302,15 +319,18 @@
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  function buildReminderUrl(p) {
-    const title = `Water ${p.name}`;
-    // The Shortcut splits this payload on the pipe character.
-    const payload = `${title}|${localStamp(reminderDateTime(p))}`;
+  // One reminder per line: "Title|YYYY-MM-DD HH:MM". The Shortcut splits the
+  // input into lines and loops, so this format serves single and bulk sends.
+  function reminderLine(p) {
+    return `Water ${p.name}|${localStamp(reminderDateTime(p))}`;
+  }
+
+  function runShortcutUrl(text) {
     return (
       "shortcuts://run-shortcut?name=" +
       encodeURIComponent(SHORTCUT_NAME) +
       "&input=text&text=" +
-      encodeURIComponent(payload)
+      encodeURIComponent(text)
     );
   }
 
@@ -323,7 +343,19 @@
     }
     if (!auto) toast(`Sending "Water ${p.name}" to Reminders…`);
     // Navigating to the scheme launches Shortcuts (or offers to install it).
-    window.location.href = buildReminderUrl(p);
+    window.location.href = runShortcutUrl(reminderLine(p));
+  }
+
+  // Bulk: send every plant in `list` to Reminders in a single trip to Shortcuts.
+  function sendAllToReminders(list) {
+    if (!list || list.length === 0) return;
+    if (!isAppleDevice()) {
+      toast("Open this on your iPhone to add Apple Reminders.");
+      return;
+    }
+    const payload = list.map(reminderLine).join("\n");
+    toast(`Sending ${list.length} reminder${list.length === 1 ? "" : "s"}…`);
+    window.location.href = runShortcutUrl(payload);
   }
 
   // ---- Detail dialog -------------------------------------------------------

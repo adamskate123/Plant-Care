@@ -175,6 +175,10 @@ body {
 .water-btn .drop { font-size: 18px; line-height: 1; }
 .water-btn:active { transform: scale(0.96); }
 
+/* Bulk reminders button */
+.bulk-wrap { padding: 6px 2px 4px; }
+.bulk-btn { width: 100%; background: #eef3f0; color: var(--green); font-weight: 700; }
+
 /* Empty state */
 .empty {
   text-align: center;
