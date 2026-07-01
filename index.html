@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>Plant Care</title>
+  <meta name="description" content="Track when you watered your indoor and outdoor plants and when they're due next." />
+  <meta name="theme-color" content="#1f8a53" />
+
+  <!-- iOS home-screen / standalone hints -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Plant Care" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <h1 class="brand"><span class="brand-mark">🌿</span> Plant Care</h1>
+      <div class="app-bar-actions">
+        <button id="autoRemindBtn" class="icon-btn" title="Auto-add to Apple Reminders when watering" aria-label="Auto-add to Apple Reminders when watering" aria-pressed="false">🍎</button>
+        <button id="notifyBtn" class="icon-btn" title="Enable reminders" aria-label="Enable reminders">🔔</button>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab is-active" data-filter="all">All</button>
+    <button class="tab" data-filter="indoor">Indoor</button>
+    <button class="tab" data-filter="outdoor">Outdoor</button>
+    <button class="tab" data-filter="due">Needs water</button>
+  </nav>
+
+  <main id="list" class="list" aria-live="polite"></main>
+
+  <button id="addBtn" class="fab" aria-label="Add a plant">+</button>
+
+  <!-- Add / edit plant dialog -->
+  <dialog id="plantDialog" class="dialog">
+    <form method="dialog" id="plantForm" class="form">
+      <h2 id="dialogTitle">Add a plant</h2>
+
+      <label class="field">
+        <span>Plant name</span>
+        <input name="name" type="text" required maxlength="60" placeholder="e.g. Monstera by the window" />
+      </label>
+
+      <fieldset class="field seg">
+        <span class="seg-label">Location</span>
+        <div class="segmented">
+          <label><input type="radio" name="type" value="indoor" checked /><span>🏠 Indoor</span></label>
+          <label><input type="radio" name="type" value="outdoor" /><span>🌳 Outdoor</span></label>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span>Water every (days)</span>
+        <input name="intervalDays" type="number" min="1" max="365" required value="7" inputmode="numeric" />
+      </label>
+
+      <label class="field">
+        <span>Last watered</span>
+        <input name="lastWatered" type="date" required />
+      </label>
+
+      <label class="field">
+        <span>Notes <em>(optional)</em></span>
+        <textarea name="notes" rows="2" maxlength="280" placeholder="Light, soil, fertilizer reminders…"></textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Plant detail / history dialog -->
+  <dialog id="detailDialog" class="dialog">
+    <div class="detail" id="detailBody"></div>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" id="detailClose">Close</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
